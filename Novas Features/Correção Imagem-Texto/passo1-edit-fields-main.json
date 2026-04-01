@@ -5,7 +5,7 @@
         {
           "id": "b6f263de-dbbc-48a1-82db-211c073f7e43",
           "name": "messageSet",
-          "value": "={{ \n  $json.messages[0].button?.text \n  || \n  $json.messages[0].text?.body \n  || \n  $json.messages[0].image?.caption \n  || \n  $json.messages[0].document?.caption \n}}",
+          "value": "={{ $json.messages[0].button?.text || $json.messages[0].text?.body || $json.messages[0].image?.caption || $json.messages[0].document?.caption }}",
           "type": "string"
         }
       ]
