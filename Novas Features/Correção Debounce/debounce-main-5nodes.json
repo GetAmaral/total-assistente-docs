@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "instanceId": "debounce-main-5nodes"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('setar_user').item.json.telefone }}_debounce_main",
+        "messageData": "={{ $('trigger-whatsapp').item.json.messages[0].text?.body || $('trigger-whatsapp').item.json.messages[0].button?.text || '[midia]' }}",
+        "tail": false
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        80
+      ],
+      "id": "c825f30c-106d-4194-934d-a643e4c50dcf",
+      "name": "Push Debounce",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('setar_user').item.json.telefone }}_debounce_owner",
+        "value": "={{ Date.now().toString() + '_' + Math.random().toString(36).substring(2, 8) }}",
+        "keyType": "automatic",
+        "expire": true,
+        "ttl": 15
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        80
+      ],
+      "id": "4f0d6d6b-f89e-4ae0-a71d-c9b2d2ed973f",
+      "name": "Set Owner",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "interval": 3,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        80
+      ],
+      "id": "4a81e25f-f5dd-4d6b-b630-e5b36dc1db43",
+      "name": "Debounce 3s",
+      "webhookId": "20133254-e69e-414c-be99-fae29a90f403"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('setar_user').item.json.telefone }}_debounce_owner",
+        "propertyName": "current_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        80
+      ],
+      "id": "e9762b5a-46ea-4710-936f-2dd37ced474b",
+      "name": "Get Owner",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6714d5ff-0400-4fa1-bd6f-d9c75cfed89a",
+              "leftValue": "={{ $json.current_owner }}",
+              "rightValue": "={{ $('Set Owner').item.json.value }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        80
+      ],
+      "id": "b5204e8c-1d9b-4417-8c46-e00631cddc5d",
+      "name": "Sou o Ultimo?"
+    }
+  ],
+  "connections": {
+    "Push Debounce": {
+      "main": [
+        [
+          {
+            "node": "Set Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Owner": {
+      "main": [
+        [
+          {
+            "node": "Debounce 3s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debounce 3s": {
+      "main": [
+        [
+          {
+            "node": "Get Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner": {
+      "main": [
+        [
+          {
+            "node": "Sou o Ultimo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
