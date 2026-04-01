@@ -1,0 +1,149 @@
+{
+  "meta": {
+    "instanceId": "debounce-4nodes"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "390ce9b2-43c3-4f0d-9af3-1b392ab8594a",
+              "name": "debounce_id",
+              "value": "={{ Date.now().toString() + '_' + Math.random().toString(36).substring(2, 8) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        1072
+      ],
+      "id": "7a3939d4-1ff6-4459-9a83-1b9065d22ed8",
+      "name": "Gerar Debounce ID"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "value": "={{ $json.debounce_id }}",
+        "keyType": "automatic",
+        "expire": true,
+        "ttl": 15
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        1072
+      ],
+      "id": "9acaddab-731c-4dab-a3b0-abfa49ddadc5",
+      "name": "Set Debounce Owner",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        1072
+      ],
+      "id": "07284c2f-a855-43a5-a7f8-b42291d9a1f6",
+      "name": "Get Debounce Owner",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c185cb3-9f03-4382-823f-d54cac78ae07",
+              "leftValue": "={{ $json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1232,
+        1072
+      ],
+      "id": "8f3b3cdc-b61e-4921-a000-795e71de4e02",
+      "name": "Sou o Ultimo?"
+    }
+  ],
+  "connections": {
+    "Gerar Debounce ID": {
+      "main": [
+        [
+          {
+            "node": "Set Debounce Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Debounce Owner": {
+      "main": [
+        [
+          {
+            "node": "firstGet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Debounce Owner": {
+      "main": [
+        [
+          {
+            "node": "Sou o Ultimo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
