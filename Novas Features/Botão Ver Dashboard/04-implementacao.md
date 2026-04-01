@@ -8,51 +8,99 @@ Adicionar um node HTTP Request no N8N que envia uma mensagem Interactive CTA URL
 
 ---
 
-## 2. Node HTTP Request — Configuracao
+## 2. Node N8N — Copiar e Colar
 
-### Payload completo para o N8N
+### Node completo para importar no N8N
+
+Copie o JSON abaixo e cole no workflow do N8N (Ctrl+V no canvas):
 
 ```json
 {
-  "method": "POST",
-  "url": "https://graph.facebook.com/v23.0/744582292082931/messages",
-  "authentication": "httpHeaderAuth",
-  "sendHeaders": true,
-  "headerParameters": {
-    "parameters": [
-      {
-        "name": "Content-Type",
-        "value": "application/json"
-      }
-    ]
-  },
-  "sendBody": true,
-  "bodyParameters": {
-    "parameters": []
-  },
-  "jsonBody": {
-    "messaging_product": "whatsapp",
-    "recipient_type": "individual",
-    "to": "={{ $json.phone }}",
-    "type": "interactive",
-    "interactive": {
-      "type": "cta_url",
-      "body": {
-        "text": "={{ $json.dashboard_message }}"
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/744582292082931/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  messaging_product: 'whatsapp',\n  recipient_type: 'individual',\n  to: String($json.phone),\n  type: 'interactive',\n  interactive: {\n    type: 'cta_url',\n    body: {\n      text: 'Acesse seu dashboard para ver seus dados completos.'\n    },\n    action: {\n      name: 'cta_url',\n      parameters: {\n        display_text: 'Ver Dashboard',\n        url: 'https://totalassistente.com.br'\n      }\n    }\n  }\n} }}",
+        "options": {}
       },
-      "action": {
-        "name": "cta_url",
-        "parameters": {
-          "display_text": "Ver Dashboard",
-          "url": "https://totalassistente.com.br"
+      "id": "cta-dashboard-001",
+      "name": "CTA — Ver Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "TDDrQvr1s0RxXTTC",
+          "name": "WhatsApp Header Auth"
         }
+      }
+    }
+  ]
+}
+```
+
+### O que o node faz
+
+Envia esta mensagem para a API da Meta:
+
+```json
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "554391936205",
+  "type": "interactive",
+  "interactive": {
+    "type": "cta_url",
+    "body": {
+      "text": "Acesse seu dashboard para ver seus dados completos."
+    },
+    "action": {
+      "name": "cta_url",
+      "parameters": {
+        "display_text": "Ver Dashboard",
+        "url": "https://totalassistente.com.br"
       }
     }
   }
 }
 ```
 
-**Credencial:** `WhatsApp Header Auth` (mesma ja usada no sistema)
+### Configuracao do node
+
+| Campo | Valor |
+|-------|-------|
+| Tipo | `n8n-nodes-base.httpRequest` v4.2 |
+| Metodo | POST |
+| URL | `https://graph.facebook.com/v23.0/744582292082931/messages` |
+| Autenticacao | `genericCredentialType` → `httpHeaderAuth` |
+| Credencial | **WhatsApp Header Auth** (ID: `TDDrQvr1s0RxXTTC`) |
+| Body | JSON (specifyBody: json) |
+| On Error | Configurar como **Continue** (nao quebrar o fluxo) |
+
+### Campo `$json.phone`
+
+O node espera receber o telefone do usuario no campo `$json.phone`. Ajuste a expressao conforme o nome do campo no seu workflow. Exemplos comuns:
+
+| Se o campo vier como... | Altere para... |
+|------------------------|----------------|
+| `$json.phone` | Ja esta correto |
+| `$json.wa_id` | `String($json.wa_id)` |
+| `$json.contacts[0].wa_id` | `String($json.contacts[0].wa_id)` |
+| Hardcoded para teste | `'554391936205'` |
 
 ---
 
