@@ -1,0 +1,10 @@
+NODE: Debounce Wait
+TIPO: Wait
+POSICAO: Depois de Set Debounce Owner
+CONEXAO: Set Debounce Owner → [Debounce Wait] → Get Debounce Owner
+
+=== CONFIGURACAO ===
+
+Resume: After Time Interval
+Amount: 5
+Unit:   Seconds

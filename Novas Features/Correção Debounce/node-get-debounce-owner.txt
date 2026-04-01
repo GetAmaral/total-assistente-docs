@@ -1,0 +1,11 @@
+NODE: Get Debounce Owner
+TIPO: Redis
+POSICAO: Depois de Debounce Wait
+CONEXAO: Debounce Wait → [Get Debounce Owner] → Sou o Ultimo?
+
+=== CONFIGURACAO ===
+
+Operation:     Get
+Key:           ={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner
+Property Name: debounce_owner
+Key Type:      automatic

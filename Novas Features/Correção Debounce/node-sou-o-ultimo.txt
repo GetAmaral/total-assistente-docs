@@ -1,0 +1,17 @@
+NODE: Sou o Ultimo?
+TIPO: If
+POSICAO: Depois de Get Debounce Owner
+CONEXAO TRUE:  → firstGet (continua o fluxo normal de processamento)
+CONEXAO FALSE: → No Operation, do nothing2 (para a execucao)
+
+=== CONFIGURACAO ===
+
+Conditions:
+  Combinator: AND
+  Case Sensitive: true
+  Type Validation: strict
+
+  Condition 1:
+    Left Value:  ={{ $json.debounce_owner }}
+    Operator:    String → equals
+    Right Value: ={{ $('Gerar Debounce ID').item.json.debounce_id }}

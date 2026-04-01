@@ -1,0 +1,15 @@
+NODE: Gerar Debounce ID
+TIPO: Edit Fields (Set)
+POSICAO: Entre pushRedisMessage e Set Debounce Owner
+CONEXAO: pushRedisMessage → [Gerar Debounce ID] → Set Debounce Owner
+
+=== CONFIGURACAO ===
+
+Mode: Manual
+Duplicate Item: false
+Include Other Fields: true
+
+Assignments:
+  Campo (Name): debounce_id
+  Valor (Value): ={{ Date.now().toString() + '_' + Math.random().toString(36).substring(2, 8) }}
+  Type: String

@@ -1,0 +1,25 @@
+NODE: Del Debounce Owner
+TIPO: Redis
+POSICAO: Junto a cada node de cleanup existente (Redis2, Redis3, Redis, Redis6, Redis8, Redis10)
+         Adicionar DEPOIS do DEL do _debounce em cada branch.
+
+=== CONFIGURACAO ===
+
+Operation: Delete
+Key:       ={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner
+
+=== ONDE ADICIONAR ===
+
+Existem 6 nodes que fazem DEL de {phone}_debounce no workflow Premium:
+  - Redis2 (branch criar_evento_agenda)
+  - Redis3 (branch padrao)
+  - Redis  (branch criar_gasto)
+  - Redis6 (branch buscar_evento_agenda)
+  - Redis8 (branch editar_evento_agenda)
+  - Redis10 (branch excluir_evento_agenda)
+
+Para cada um desses, adicionar um "Del Debounce Owner" logo DEPOIS.
+Pode usar o mesmo nome em todos ("Del Debounce Owner") ou numerar
+("Del Owner 1", "Del Owner 2", etc).
+
+A key e TTL sao os mesmos em todos os casos.

@@ -1,0 +1,13 @@
+NODE: Set Debounce Owner
+TIPO: Redis
+POSICAO: Depois de Gerar Debounce ID
+CONEXAO: Gerar Debounce ID → [Set Debounce Owner] → Debounce Wait
+
+=== CONFIGURACAO ===
+
+Operation: Set
+Key:       ={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner
+Value:     ={{ $json.debounce_id }}
+Key Type:  automatic
+Expire:    true
+TTL:       15
