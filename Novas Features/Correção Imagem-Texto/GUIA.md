@@ -8,10 +8,10 @@
 
 ## Arquivos
 
-| Arquivo | Workflow | Node |
-|---------|----------|------|
-| `passo1-edit-fields-main.json` | Main - Total Assistente | Edit Fields |
-| `passo2-information-extractor2-premium.json` | User Premium - Total | Information Extractor2 |
+| Arquivo | Workflow | Node | Formato |
+|---------|----------|------|---------|
+| `passo1-edit-fields-main.json` | Main - Total Assistente | Edit Fields | Colavel (Ctrl+V no canvas) |
+| `passo2-information-extractor2-premium.json` | User Premium - Total | Information Extractor2 + OpenAI Chat Model6 | Colavel (Ctrl+V no canvas) |
 
 ---
 
@@ -23,22 +23,26 @@
 1. Localizar o node `Edit Fields` no canvas do Main
    - Fica ANTES dos nodes `Premium User` / `Standard User`
    - Position aprox: [-10176, -256]
-2. Clicar no node → abrir parametros
-3. No campo `messageSet`, substituir a expressao:
+2. Selecionar o node → deletar (Delete/Backspace)
+3. Copiar o conteudo de `passo1-edit-fields-main.json`
+4. Ctrl+V no canvas
+5. Reconectar os fios:
+   - **Entrada:** mesmo node que alimentava o Edit Fields original
+   - **Saida:** mesmo node que recebia do Edit Fields original
 
-**ANTES:**
+**O que mudou na expressao:**
+
+ANTES:
 ```
-{{ $json.messages[0].button?.text || $json.messages[0].text?.body }}
+{{ $('trigger-whatsapp').item.json.messages[0].interactive?.button_reply?.title || $('trigger-whatsapp').item.json.messages[0].button?.text || $('trigger-whatsapp').item.json.messages[0].text?.body }}
 ```
 
-**DEPOIS:**
+DEPOIS (adicionado 2 fallbacks no final):
 ```
-{{ $json.messages[0].button?.text || $json.messages[0].text?.body || $json.messages[0].image?.caption || $json.messages[0].document?.caption }}
+{{ $('trigger-whatsapp').item.json.messages[0].interactive?.button_reply?.title || $('trigger-whatsapp').item.json.messages[0].button?.text || $('trigger-whatsapp').item.json.messages[0].text?.body || $('trigger-whatsapp').item.json.messages[0].image?.caption || $('trigger-whatsapp').item.json.messages[0].document?.caption }}
 ```
 
-**Alternativa rapida:** Deletar o node Edit Fields → Ctrl+V com o conteudo de `passo1-edit-fields-main.json` → reconectar os mesmos fios (entrada e saida).
-
-> **O que muda:** Agora, quando o usuario envia imagem/documento com legenda, o campo `conversation` que chega no Premium workflow tera o texto da legenda. Para texto e botao, nada muda.
+> Agora, quando o usuario envia imagem/documento com legenda, o campo `conversation` que chega no Premium workflow tera o texto da legenda. Para texto, botao e interactive, nada muda (ja sao capturados antes no `||`).
 
 ---
 
@@ -51,10 +55,16 @@
    - Fica DEPOIS de `Aggregate4`
    - Fica ANTES de `Edit Fields` (o que extrai `mensagem`)
    - Position aprox: [-10976, -816]
-2. Clicar no node → abrir o prompt (campo "Text")
-3. O prompt INTEIRO ja esta pronto no arquivo `passo2-information-extractor2-premium.json`
+2. Selecionar o node (e o sub-node `OpenAI Chat Model6` junto) → deletar
+3. Copiar o conteudo de `passo2-information-extractor2-premium.json`
+4. Ctrl+V no canvas
+5. O `OpenAI Chat Model6` ja vem conectado ao `Information Extractor2` pelo JSON
+6. Reconectar:
+   - **Entrada:** `Aggregate4` → `Information Extractor2`
+   - **Saida:** `Information Extractor2` → `Edit Fields` (o que extrai `mensagem`)
+7. Verificar que a credential `OpenAi account` esta configurada no `OpenAI Chat Model6`
 
-**O que foi adicionado no prompt (logo no inicio, antes de "DATA ATUAL"):**
+**O que foi adicionado no prompt (logo no inicio, ANTES de "DATA ATUAL"):**
 
 ```
 LEGENDA DO USUARIO (caption enviada junto com a imagem/documento):
@@ -71,11 +81,6 @@ REGRA DE PRIORIDADE PARA NOME DO GASTO
 - Se NAO houver legenda (campo vazio), use o texto do OCR normalmente como faz hoje.
 ```
 
-**Alternativa rapida:** Deletar o node Information Extractor2 → Ctrl+V com o conteudo de `passo2-information-extractor2-premium.json` → reconectar:
-- Entrada: vem de `Aggregate4`
-- Saida cima: vai para `Edit Fields` (o que extrai `mensagem`)
-- Saida baixo: vem de `OpenAI Chat Model6` (sub-node, ja conecta automaticamente)
-
 ---
 
 ## Passo 3 — Salvar e Testar
@@ -91,7 +96,7 @@ Salvar ambos os workflows.
 | 3 | Imagem COM caption descritiva | Foto de nota fiscal + legenda "almoco equipe" | Gasto: "almoco equipe" + valor do OCR |
 | 4 | PDF COM caption | PDF de conta + legenda "conta de luz" | Gasto: "conta de luz" + valor do OCR |
 | 5 | Texto normal | "gastei 50 em cafe" | Sem mudanca |
-| 6 | Botao | Clique em botao | Sem mudanca |
+| 6 | Botao / Interactive | Clique em botao | Sem mudanca |
 | 7 | Audio | Audio qualquer | Sem mudanca |
 | 8 | Imagem sem texto | Foto de paisagem sem caption | OCR vazio, nenhum gasto (sem mudanca) |
 
@@ -109,6 +114,7 @@ Salvar ambos os workflows.
 - Para imagens/documentos SEM caption: `image?.caption` retorna `undefined`, o `||` continua, `messageSet` fica vazio como hoje
 - Para texto: `text?.body` ja captura antes de chegar em `image?.caption`
 - Para botao: `button?.text` ja captura primeiro
+- Para interactive: `interactive?.button_reply?.title` ja captura primeiro
 - No prompt: quando `conversation` e vazio, o GPT ve campo vazio e ignora a regra de prioridade
 
 ### Prova de que o path esta correto
@@ -126,8 +132,14 @@ Documentacao oficial Meta confirma: `messages[0].image.caption` e o path correto
 
 ## Checklist
 
-- [ ] Passo 1: expressao do Edit Fields atualizada no Main
-- [ ] Passo 2: prompt do Information Extractor2 atualizado no Premium
+- [ ] Passo 1: deletar Edit Fields antigo no Main
+- [ ] Passo 1: colar Edit Fields novo (Ctrl+V)
+- [ ] Passo 1: reconectar fios de entrada e saida
+- [ ] Passo 2: deletar Information Extractor2 + OpenAI Chat Model6 no Premium
+- [ ] Passo 2: colar nodes novos (Ctrl+V)
+- [ ] Passo 2: conectar Aggregate4 → Information Extractor2
+- [ ] Passo 2: conectar Information Extractor2 → Edit Fields (mensagem)
+- [ ] Passo 2: verificar credential OpenAi account no OpenAI Chat Model6
 - [ ] Salvar Main workflow
 - [ ] Salvar Premium workflow
 - [ ] Teste 1: imagem sem caption (comportamento igual)

@@ -1,23 +1,31 @@
 {
-  "parameters": {
-    "assignments": {
-      "assignments": [
-        {
-          "id": "b6f263de-dbbc-48a1-82db-211c073f7e43",
-          "name": "messageSet",
-          "value": "={{ $json.messages[0].button?.text || $json.messages[0].text?.body || $json.messages[0].image?.caption || $json.messages[0].document?.caption }}",
-          "type": "string"
-        }
-      ]
-    },
-    "options": {}
+  "meta": {
+    "instanceId": "fix-caption-imagem-texto"
   },
-  "type": "n8n-nodes-base.set",
-  "typeVersion": 3.4,
-  "position": [
-    -10176,
-    -256
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b6f263de-dbbc-48a1-82db-211c073f7e43",
+              "name": "messageSet",
+              "value": "={{ $('trigger-whatsapp').item.json.messages[0].interactive?.button_reply?.title || $('trigger-whatsapp').item.json.messages[0].button?.text || $('trigger-whatsapp').item.json.messages[0].text?.body || $('trigger-whatsapp').item.json.messages[0].image?.caption || $('trigger-whatsapp').item.json.messages[0].document?.caption }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10176,
+        -256
+      ],
+      "id": "e3971abd-5b44-43c1-b0f7-d1f5ac7569a0",
+      "name": "Edit Fields"
+    }
   ],
-  "id": "e3971abd-5b44-43c1-b0f7-d1f5ac7569a0",
-  "name": "Edit Fields"
+  "connections": {}
 }

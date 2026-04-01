@@ -1,16 +1,60 @@
 {
-  "parameters": {
-    "text": "=ENTRADA\nVocê receberá um texto bruto extraído da imagem/documento via OCR:\n{{ $('Aggregate4').item.json.data[0].full_markdown }}\n\nLEGENDA DO USUARIO (caption enviada junto com a imagem/documento):\n{{ $('Evolution API- Take all').item.json.conversation }}\n\n========================\nREGRA DE PRIORIDADE PARA NOME DO GASTO\n========================\n- Se o usuario enviou uma LEGENDA (campo acima NAO vazio), o NOME DO GASTO deve ser a legenda do usuario, NAO o texto extraido pelo OCR.\n- O OCR serve para extrair VALORES (R$), DATAS e HORARIOS.\n- A legenda do usuario define o NOME/DESCRICAO do gasto ou evento.\n- Exemplo: OCR diz \"Sicredi R$300,00\", legenda diz \"pizza com amigos\" → gasto = \"pizza com amigos, R$300,00\"\n- Exemplo: OCR diz \"Vivo R$89,90\", legenda diz \"internet casa\" → gasto = \"internet casa, R$89,90\"\n- Se NAO houver legenda (campo vazio), use o texto do OCR normalmente como faz hoje.\n\nDATA ATUAL\n{{ $now }}\n\nOBJETIVO\nLer o texto e produzir FRASES HUMANAS para:\nA) GASTOS (apenas SAÍDAS)\nB) EVENTOS DE AGENDA (reuniões/convites/compromissos)\n\nSAÍDA (MUITO IMPORTANTE)\n- Você deve retornar SOMENTE um JSON válido no formato definido no schema.\n- NÃO chame tools.\n- NÃO escreva explicações.\n- NÃO escreva Markdown.\n- Você apenas gera as frases.\n\n========================\nREGRA CRÍTICA: NÃO CONFUNDIR HORÁRIO COM VALOR\n========================\nUm número SÓ é VALOR (gasto) se tiver indício claro de dinheiro. Caso contrário, pode ser HORÁRIO.\n\nINDÍCIOS DE DINHEIRO (gasto):\n- \"R$\", \"reais\", \"brl\"\n- \"paguei\", \"gastei\", \"comprei\", \"assinatura\", \"fatura\", \"cartão\", \"pix\", \"boleto\", \"pagamento\", \"total\", \"ficou\", \"deu\"\n- formato monetário típico: \"10,00\" / \"10.00\" / \"1.234,56\"\n\nINDÍCIOS DE HORÁRIO (evento):\n- contém \"h\" (15h, 20h)\n- contém \":\" (15:30)\n- precedido por \"às\", \"as\", \"por volta das\", \"entre\"\n- lista de horários (\"20 21 22\") em contexto de reunião/compromisso\n\nSe houver palavra de AGENDA (reunião/convite/consulta/prova/missa/encontro/aula/treino) + números, trate esses números como HORÁRIOS.\n\n========================\nA) GASTOS (APENAS SAÍDAS)\n========================\n- Nunca gerar entradas. Apenas gastos/saídas.\n- Você SEMPRE deve inferir categoria e tipo (mesmo que seja \"Outros\").\n- Se houver MAIS DE UM GASTO, gere UMA frase por gasto.\n\nAGRUPAMENTO DE VALORES (OBRIGATÓRIO)\n- Se houver vários valores para o MESMO gasto:\n  1) Se existir \"total/final/deu X/ficou X\", use X como valor final e ignore parciais.\n  2) Se NÃO existir total explícito, some os parciais do mesmo item para formar UM valor final.\n- Nunca some valores de itens diferentes.\n\nFORMATO DA FRASE DE GASTO (exatamente assim)\nOlá! Registre esse gasto para mim: {nome}, R${valor}, {categoria}, {tipo}, no dia e hora {data_hora}\n\nFORMATAÇÃO\n- Valor em padrão BR: R$1.234,56 (ex.: 10 -> R$10,00)\n- Data/hora:\n  - Se houver no texto, usar.\n  - Se não houver, usar {{ $now }}.\n  - Sempre em formato HUMANO e em CAIXA ALTA no estilo:\n    \"DIA 11 DE SETEMBRO AS 19H30MIN58S\"\n  - Se houver apenas data sem hora: usar 00H00MIN00S.\n\n========================\nB) EVENTOS (AGENDA)\n========================\n- Identifique compromissos como reuniões, convites, consultas, provas, missas, encontros, aulas, treinos.\n- Se houver múltiplos horários para o mesmo evento (ex.: \"reunião às 20 às 21 às 22\" ou \"reunião 20 21 22\"):\n  -> gere 1 frase por horário (eventos separados), mantendo o mesmo título.\n\nFORMATO DA FRASE DE EVENTO (exatamente assim)\nOlá! Crie esse evento para mim: {titulo}, no dia e hora {data_hora}\n\nDATA/HORA PARA EVENTO\n- Se houver horário mas não houver data: usar a data de {{ $now }} (hoje) e aplicar o horário.\n- Se houver data sem hora: usar 00H00MIN00S.\n- Sempre no formato HUMANO em CAIXA ALTA:\n  \"DIA 11 DE SETEMBRO AS 19H30MIN58S\"\n\n========================\nSAÍDA FINAL (JSON)\n========================\n- Você deve preencher:\n  - \"gastos\": lista de frases de gasto\n  - \"eventos\": lista de frases de evento\n- Se não houver itens, usar lista vazia.\n- Retorne SOMENTE o JSON final.\n\n\nVOCE PRECISA INCLUIR TODAS AS REUNIOES ENCONTRADAS NA IMAGEM. CASO EXISITIR, INCLUA TAMBEM TODOS OS GASTOS, A MENSAGEM É VARIÁVEL, ELA TEM QUE TER TUDO JUNTO SEPARADO APENAS POR UMA VÍRGULA.",
-    "schemaType": "fromJson",
-    "jsonSchemaExample": "{\n  \"mensagem\": \"Olá! Crie esse evento para mim: Reunião, no dia e hora DIA 16 DE DEZEMBRO AS 19H00MIN00S, Olá! Crie esse evento para mim: Reunião, no dia e hora DIA 16 DE DEZEMBRO AS 21H00MIN00S, REGISTRE esse gasto de 10 reais de pao de queijo\"\n}\n",
-    "options": {}
+  "meta": {
+    "instanceId": "fix-caption-imagem-texto"
   },
-  "type": "@n8n/n8n-nodes-langchain.informationExtractor",
-  "typeVersion": 1.2,
-  "position": [
-    -10976,
-    -816
+  "nodes": [
+    {
+      "parameters": {
+        "text": "=ENTRADA\nVocê receberá um texto bruto extraído da imagem/documento via OCR:\n{{ $('Aggregate4').item.json.data[0].full_markdown }}\n\nLEGENDA DO USUARIO (caption enviada junto com a imagem/documento):\n{{ $('Evolution API- Take all').item.json.conversation }}\n\n========================\nREGRA DE PRIORIDADE PARA NOME DO GASTO\n========================\n- Se o usuario enviou uma LEGENDA (campo acima NAO vazio), o NOME DO GASTO deve ser a legenda do usuario, NAO o texto extraido pelo OCR.\n- O OCR serve para extrair VALORES (R$), DATAS e HORARIOS.\n- A legenda do usuario define o NOME/DESCRICAO do gasto ou evento.\n- Exemplo: OCR diz \"Sicredi R$300,00\", legenda diz \"pizza com amigos\" → gasto = \"pizza com amigos, R$300,00\"\n- Exemplo: OCR diz \"Vivo R$89,90\", legenda diz \"internet casa\" → gasto = \"internet casa, R$89,90\"\n- Se NAO houver legenda (campo vazio), use o texto do OCR normalmente como faz hoje.\n\nDATA ATUAL\n{{ $now }}\n\nOBJETIVO\nLer o texto e produzir FRASES HUMANAS para:\nA) GASTOS (apenas SAÍDAS)\nB) EVENTOS DE AGENDA (reuniões/convites/compromissos)\n\nSAÍDA (MUITO IMPORTANTE)\n- Você deve retornar SOMENTE um JSON válido no formato definido no schema.\n- NÃO chame tools.\n- NÃO escreva explicações.\n- NÃO escreva Markdown.\n- Você apenas gera as frases.\n\n========================\nREGRA CRÍTICA: NÃO CONFUNDIR HORÁRIO COM VALOR\n========================\nUm número SÓ é VALOR (gasto) se tiver indício claro de dinheiro. Caso contrário, pode ser HORÁRIO.\n\nINDÍCIOS DE DINHEIRO (gasto):\n- \"R$\", \"reais\", \"brl\"\n- \"paguei\", \"gastei\", \"comprei\", \"assinatura\", \"fatura\", \"cartão\", \"pix\", \"boleto\", \"pagamento\", \"total\", \"ficou\", \"deu\"\n- formato monetário típico: \"10,00\" / \"10.00\" / \"1.234,56\"\n\nINDÍCIOS DE HORÁRIO (evento):\n- contém \"h\" (15h, 20h)\n- contém \":\" (15:30)\n- precedido por \"às\", \"as\", \"por volta das\", \"entre\"\n- lista de horários (\"20 21 22\") em contexto de reunião/compromisso\n\nSe houver palavra de AGENDA (reunião/convite/consulta/prova/missa/encontro/aula/treino) + números, trate esses números como HORÁRIOS.\n\n========================\nA) GASTOS (APENAS SAÍDAS)\n========================\n- Nunca gerar entradas. Apenas gastos/saídas.\n- Você SEMPRE deve inferir categoria e tipo (mesmo que seja \"Outros\").\n- Se houver MAIS DE UM GASTO, gere UMA frase por gasto.\n\nAGRUPAMENTO DE VALORES (OBRIGATÓRIO)\n- Se houver vários valores para o MESMO gasto:\n  1) Se existir \"total/final/deu X/ficou X\", use X como valor final e ignore parciais.\n  2) Se NÃO existir total explícito, some os parciais do mesmo item para formar UM valor final.\n- Nunca some valores de itens diferentes.\n\nFORMATO DA FRASE DE GASTO (exatamente assim)\nOlá! Registre esse gasto para mim: {nome}, R${valor}, {categoria}, {tipo}, no dia e hora {data_hora}\n\nFORMATAÇÃO\n- Valor em padrão BR: R$1.234,56 (ex.: 10 -> R$10,00)\n- Data/hora:\n  - Se houver no texto, usar.\n  - Se não houver, usar {{ $now }}.\n  - Sempre em formato HUMANO e em CAIXA ALTA no estilo:\n    \"DIA 11 DE SETEMBRO AS 19H30MIN58S\"\n  - Se houver apenas data sem hora: usar 00H00MIN00S.\n\n========================\nB) EVENTOS (AGENDA)\n========================\n- Identifique compromissos como reuniões, convites, consultas, provas, missas, encontros, aulas, treinos.\n- Se houver múltiplos horários para o mesmo evento (ex.: \"reunião às 20 às 21 às 22\" ou \"reunião 20 21 22\"):\n  -> gere 1 frase por horário (eventos separados), mantendo o mesmo título.\n\nFORMATO DA FRASE DE EVENTO (exatamente assim)\nOlá! Crie esse evento para mim: {titulo}, no dia e hora {data_hora}\n\nDATA/HORA PARA EVENTO\n- Se houver horário mas não houver data: usar a data de {{ $now }} (hoje) e aplicar o horário.\n- Se houver data sem hora: usar 00H00MIN00S.\n- Sempre no formato HUMANO em CAIXA ALTA:\n  \"DIA 11 DE SETEMBRO AS 19H30MIN58S\"\n\n========================\nSAÍDA FINAL (JSON)\n========================\n- Você deve preencher:\n  - \"gastos\": lista de frases de gasto\n  - \"eventos\": lista de frases de evento\n- Se não houver itens, usar lista vazia.\n- Retorne SOMENTE o JSON final.\n\n\nVOCE PRECISA INCLUIR TODAS AS REUNIOES ENCONTRADAS NA IMAGEM. CASO EXISITIR, INCLUA TAMBEM TODOS OS GASTOS, A MENSAGEM É VARIÁVEL, ELA TEM QUE TER TUDO JUNTO SEPARADO APENAS POR UMA VÍRGULA.",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"mensagem\": \"Olá! Crie esse evento para mim: Reunião, no dia e hora DIA 16 DE DEZEMBRO AS 19H00MIN00S, Olá! Crie esse evento para mim: Reunião, no dia e hora DIA 16 DE DEZEMBRO AS 21H00MIN00S, REGISTRE esse gasto de 10 reais de pao de queijo\"\n}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -10976,
+        -816
+      ],
+      "id": "87ee02c5-e407-4f7b-a22d-1211ed332565",
+      "name": "Information Extractor2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -11024,
+        -592
+      ],
+      "id": "99b62165-48dc-4457-823d-34e1adadfb45",
+      "name": "OpenAI Chat Model6",
+      "credentials": {
+        "openAiApi": {
+          "id": "ioug5VWKEO9a7n19",
+          "name": "OpenAi account"
+        }
+      }
+    }
   ],
-  "id": "87ee02c5-e407-4f7b-a22d-1211ed332565",
-  "name": "Information Extractor2"
+  "connections": {
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
 }
