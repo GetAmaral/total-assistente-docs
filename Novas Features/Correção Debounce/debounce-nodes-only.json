@@ -1,0 +1,849 @@
+{
+  "meta": {
+    "instanceId": "paste-debounce-fix"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f31e53d-741c-43b6-9ee1-c75b44a2bff9",
+              "name": "debounce_id",
+              "value": "={{ Date.now().toString() + '_' + Math.random().toString(36).substring(2, 8) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        1072
+      ],
+      "id": "812989f8-b29e-4e62-819a-6931a8d09f83",
+      "name": "Gerar Debounce ID"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "value": "={{ $json.debounce_id }}",
+        "keyType": "automatic",
+        "expire": true,
+        "ttl": 15
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        1072
+      ],
+      "id": "488e4b98-e3b6-4f5f-8236-5c7c1641ffc7",
+      "name": "Set Debounce Owner",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e5914297-98cc-42dc-ab58-ec5b3ab2e9d5",
+              "leftValue": "={{ $('Get Owner 1').item.json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3904,
+        0
+      ],
+      "id": "7ebb3a21-525f-46d0-b6b6-922b3ac0e614",
+      "name": "Check Owner 1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        0
+      ],
+      "id": "1caf7ef5-ec1c-41b1-9520-8539457853e1",
+      "name": "Get Owner 1",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4256,
+        0
+      ],
+      "id": "5c583bfe-2061-464b-b786-02927928cae1",
+      "name": "Del Owner 1",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4064,
+        160
+      ],
+      "id": "443a39fe-8609-4a31-945a-674390a73452",
+      "name": "Debounce Skip 1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a8d9bda3-668f-4f40-9728-e718cf58a709",
+              "leftValue": "={{ $('Get Owner 2').item.json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4144,
+        368
+      ],
+      "id": "f7f87add-066d-4f20-a219-93f84dbd137c",
+      "name": "Check Owner 2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        368
+      ],
+      "id": "2be851d3-1b10-4b87-9219-7fe1641d9399",
+      "name": "Get Owner 2",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4496,
+        368
+      ],
+      "id": "60a5ffce-e8f7-45dc-943c-1259e7631769",
+      "name": "Del Owner 2",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4304,
+        528
+      ],
+      "id": "bf61a50f-5fe6-41e4-b996-e310d1d18523",
+      "name": "Debounce Skip 2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "950329d8-e2f0-4061-afc8-b346c52c7d9c",
+              "leftValue": "={{ $('Get Owner 3').item.json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4512,
+        672
+      ],
+      "id": "7cfe030f-62f9-400e-a704-7f4d28340937",
+      "name": "Check Owner 3"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4352,
+        672
+      ],
+      "id": "589dca7d-3482-4a57-8500-58538e92906b",
+      "name": "Get Owner 3",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4864,
+        672
+      ],
+      "id": "b923b687-bfb5-476b-8c20-0c566eb8355a",
+      "name": "Del Owner 3",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4672,
+        832
+      ],
+      "id": "efab1c59-6bfd-4ea5-9728-10ec0cb6f844",
+      "name": "Debounce Skip 3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "de086123-2577-42b2-ba24-25e81404f537",
+              "leftValue": "={{ $('Get Owner 4').item.json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3968,
+        1584
+      ],
+      "id": "595dd1dc-1403-4b7b-b5ce-83372962577d",
+      "name": "Check Owner 4"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        1584
+      ],
+      "id": "ea0ee99f-451b-4f22-8a6c-27ccd41e7f66",
+      "name": "Get Owner 4",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4320,
+        1584
+      ],
+      "id": "a825c63c-636d-4c40-a770-f5cfdaba154f",
+      "name": "Del Owner 4",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4128,
+        1744
+      ],
+      "id": "1332186e-5758-49f8-8774-a932c8b9db9b",
+      "name": "Debounce Skip 4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7d11bf72-d6a5-43cd-ba80-9620137ddf31",
+              "leftValue": "={{ $('Get Owner 5').item.json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4560,
+        2160
+      ],
+      "id": "98dff35c-f16f-43d9-b1d8-77f2e2d39542",
+      "name": "Check Owner 5"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        2160
+      ],
+      "id": "80c81762-9064-4a51-ad48-44960fe0cda3",
+      "name": "Get Owner 5",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4912,
+        2160
+      ],
+      "id": "324173d5-5b5f-4a2c-8037-b37f248e066c",
+      "name": "Del Owner 5",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4720,
+        2320
+      ],
+      "id": "7a123124-209c-4cad-9162-63f17edd99df",
+      "name": "Debounce Skip 5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c7717f6a-44e7-4cc3-8f6d-71762b182bda",
+              "leftValue": "={{ $('Get Owner 6').item.json.debounce_owner }}",
+              "rightValue": "={{ $('Gerar Debounce ID').item.json.debounce_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5328,
+        1696
+      ],
+      "id": "6c73b37f-cfcc-44f8-9d1c-ad6177859761",
+      "name": "Check Owner 6"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner",
+        "propertyName": "debounce_owner",
+        "keyType": "automatic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5168,
+        1696
+      ],
+      "id": "e9bc2b2c-ae33-4af6-bafb-41ab914eaf03",
+      "name": "Get Owner 6",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Evolution API- Take all').item.json.phone }}_debounce_owner"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5680,
+        1696
+      ],
+      "id": "2a3417f8-6230-4785-b49a-70b3c05455ee",
+      "name": "Del Owner 6",
+      "credentials": {
+        "redis": {
+          "id": "amNI4dVfk3J8Bz0v",
+          "name": "Redis Germany"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5488,
+        1856
+      ],
+      "id": "d83986ca-4337-4566-8f83-8bf9a2370752",
+      "name": "Debounce Skip 6"
+    }
+  ],
+  "connections": {
+    "Gerar Debounce ID": {
+      "main": [
+        [
+          {
+            "node": "Set Debounce Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Debounce Owner": {
+      "main": [
+        [
+          {
+            "node": "firstGet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner 1": {
+      "main": [
+        [
+          {
+            "node": "Check Owner 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Owner 1": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce Skip 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Owner 1": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner 2": {
+      "main": [
+        [
+          {
+            "node": "Check Owner 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Owner 2": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce Skip 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Owner 2": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Create Tool1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner 3": {
+      "main": [
+        [
+          {
+            "node": "Check Owner 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Owner 3": {
+      "main": [
+        [
+          {
+            "node": "Redis6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce Skip 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Owner 3": {
+      "main": [
+        [
+          {
+            "node": "Send message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner 4": {
+      "main": [
+        [
+          {
+            "node": "Check Owner 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Owner 4": {
+      "main": [
+        [
+          {
+            "node": "Redis10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce Skip 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Owner 4": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Create Calendar Tool3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner 5": {
+      "main": [
+        [
+          {
+            "node": "Check Owner 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Owner 5": {
+      "main": [
+        [
+          {
+            "node": "Redis8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce Skip 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Owner 5": {
+      "main": [
+        [
+          {
+            "node": "Set Range (Batch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner 6": {
+      "main": [
+        [
+          {
+            "node": "Check Owner 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Owner 6": {
+      "main": [
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce Skip 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Owner 6": {
+      "main": [
+        [
+          {
+            "node": "Buscar Conflitos (Unico)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
