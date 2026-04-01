@@ -1,0 +1,149 @@
+{
+  "meta": {
+    "instanceId": "audio-longo-fix"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "98cc35fc-dada-467d-95a3-d7d1e22d2644",
+              "leftValue": "={{ $json.transcription_text.length }}",
+              "rightValue": 4000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        -96
+      ],
+      "id": "b44100cd-0b51-40cf-b211-f949b64dbc8d",
+      "name": "Audio Longo?"
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "response",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "type": "text",
+              "role": "system",
+              "content": "Você é um assistente que resume textos de forma clara e concisa em português brasileiro. Resuma o texto mantendo os pontos principais. O resumo DEVE ter no máximo 3000 caracteres. Apenas resuma. Apenas isso."
+            },
+            {
+              "type": "text",
+              "role": "user",
+              "content": "={{ $json.transcription_text }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 800,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1264,
+        -200
+      ],
+      "id": "c158a1b4-ff99-431b-a41f-720e0f33a807",
+      "name": "Resumir Audio Longo"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "messagingProduct": "whatsapp",
+        "phoneNumberId": "744582292082931",
+        "recipientPhoneNumber": "=+{{ $('trigger-whatsapp').item.json.contacts[0].wa_id }}",
+        "messageType": "text",
+        "textBody": "=*Resumo do áudio:*\n\n{{ $json.output[0].content[0].text }}\n\n_— O áudio era muito longo para transcrição completa. Este é um resumo feito por *Total Assistente*._",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        -200
+      ],
+      "id": "6304eb5e-9bf3-4639-81b3-a05aac4026cb",
+      "name": "Enviar Resumo Longo",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "j0RGyMFfqZfWpCBu",
+          "name": "WhatsApp account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Audio Longo?": {
+      "main": [
+        [
+          {
+            "node": "Resumir Audio Longo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumir Audio Longo": {
+      "main": [
+        [
+          {
+            "node": "Enviar Resumo Longo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Resumo Longo": {
+      "main": [
+        [
+          {
+            "node": "Resumir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
