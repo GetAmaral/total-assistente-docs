@@ -1,0 +1,23 @@
+{
+  "parameters": {
+    "assignments": {
+      "assignments": [
+        {
+          "id": "b6f263de-dbbc-48a1-82db-211c073f7e43",
+          "name": "messageSet",
+          "value": "={{ \n  $json.messages[0].button?.text \n  || \n  $json.messages[0].text?.body \n  || \n  $json.messages[0].image?.caption \n  || \n  $json.messages[0].document?.caption \n}}",
+          "type": "string"
+        }
+      ]
+    },
+    "options": {}
+  },
+  "type": "n8n-nodes-base.set",
+  "typeVersion": 3.4,
+  "position": [
+    -10176,
+    -256
+  ],
+  "id": "e3971abd-5b44-43c1-b0f7-d1f5ac7569a0",
+  "name": "Edit Fields"
+}
