@@ -25,11 +25,13 @@
 
 ## Regras de Negocio
 
-- [ ] Botao so e enviado para branches financeiros e agenda
+- [ ] Botao APENAS apos criacoes: `registrar_gasto`, `registrar_receita`, `criar_evento`, `criar_lembrete`
+- [ ] Botao NAO e enviado apos consultas (saldo, relatorio, agenda)
+- [ ] Botao NAO e enviado apos exclusoes
 - [ ] Botao NAO e enviado durante onboarding
 - [ ] Botao NAO e enviado em respostas de erro
 - [ ] Botao NAO e enviado em saudacoes/conversas casuais
-- [ ] Rate-limit definido (sugestao: max 1 botao a cada 5 min por usuario)
+- [ ] Botao chega como **segunda mensagem separada** (apos a confirmacao de texto)
 
 ## Testes em DEV
 
@@ -40,7 +42,8 @@
 - [ ] T5: Resposta texto + botao chegam na ordem correta
 - [ ] T6: display_text "Ver Dashboard" visivel no celular
 - [ ] T7: URL invalida proposital — fluxo nao quebra
-- [ ] T8: Verificar que branches nao-financeiros NAO recebem botao
+- [ ] T8: Verificar que branches de consulta/exclusao NAO recebem botao
+- [ ] T9: Verificar que as duas mensagens (texto + botao) chegam na ordem correta
 
 ## Pos-Deploy (Producao)
 

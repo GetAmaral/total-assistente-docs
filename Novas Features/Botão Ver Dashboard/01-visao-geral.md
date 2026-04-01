@@ -13,19 +13,24 @@ Um botao clicavel dentro da conversa do WhatsApp que, ao ser tocado, abre o nave
 **Nome do botao:** "Ver Dashboard"
 
 **Comportamento esperado:**
-1. Usuario interage com o assistente (ex: registra gasto, consulta agenda)
-2. Sistema envia resposta normal + botao "Ver Dashboard"
-3. Usuario toca no botao
-4. Navegador abre em `https://totalassistente.com.br`
+1. Usuario cria/registra algo (gasto, receita, evento, lembrete)
+2. Sistema envia a resposta normal de confirmacao (mensagem de texto)
+3. Sistema envia uma **segunda mensagem separada** com o botao "Ver Dashboard"
+4. Usuario toca no botao
+5. Navegador abre em `https://totalassistente.com.br`
+
+**Por que uma segunda mensagem?**
+A API da Meta **nao permite misturar** reply buttons (Sim/Nao) com CTA URL na mesma mensagem. Sao tipos mutuamente exclusivos (`interactive.type = "button"` vs `"cta_url"`). Alem disso, separar garante que a confirmacao chegue primeiro e o botao seja um complemento opcional.
 
 ---
 
 ## Por que
 
-- Usuarios registram gastos e eventos pelo WhatsApp mas nao tem acesso facil a visao consolidada
+- Usuarios criam registros pelo WhatsApp mas nao tem acesso facil a visao consolidada
 - O dashboard web oferece graficos, relatorios e visao geral que o WhatsApp nao comporta
 - Reduz fricao: usuario nao precisa digitar URL ou buscar o site manualmente
 - Aumenta engajamento com a plataforma web
+- Momento ideal: logo apos criar algo, o usuario tem curiosidade de ver o resultado completo
 
 ---
 
