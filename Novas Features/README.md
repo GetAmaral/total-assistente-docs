@@ -7,6 +7,7 @@ Documentacao tecnica de novas funcionalidades planejadas para o Total Assistente
 | Feature | Status | Documento |
 |---------|--------|-----------|
 | Botao "Ver Dashboard" no WhatsApp | Em estudo | [Botao Ver Dashboard/](Botão%20Ver%20Dashboard/) |
+| Correcao Resumo PT-BR (code-switching LLM) | Pronto para deploy | [Correcao Resumo PT-BR/](Correção%20Resumo%20PT-BR/) |
 
 ---
 
