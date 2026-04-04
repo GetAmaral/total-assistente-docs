@@ -1,260 +1,183 @@
-# Passo 7 — Audit Log (Tabela + Nodes INSERT)
+# Passo 7 — Audit Log
 
 **Onde:** Supabase (banco) + Calendar WebHooks + Financeiro
 **Resolve:** MEDIA-5 (sem audit log de exclusoes)
-**Risco:** BAIXO (apenas adiciona tabela e nodes INSERT, nao altera fluxo existente)
-**Camada Swiss Cheese:** 10 (LOSA — auditoria continua de operacoes)
 
 ---
 
 ## O Que Fazer
 
-1. Criar tabela `deletion_log` no Supabase
-2. Adicionar nodes INSERT ANTES de cada operacao de exclusao
-3. Registrar: quem excluiu, quando, o que, e um snapshot do registro
+1. Rodar migration SQL criando tabela `deletion_log`
+2. Adicionar nodes Supabase INSERT antes de cada soft delete
 
 ---
 
-## 7.1 — Migration SQL: Criar tabela deletion_log
+## 7.1 — Migration SQL
 
-**Onde executar:** Supabase SQL Editor
+**Onde executar:** Supabase Dashboard → SQL Editor → New Query
 
 ```sql
--- ============================================
 -- MIGRATION: Audit Log de Exclusoes
--- Data: 2026-04-04
--- Resolve: MEDIA-5 (sem audit log)
--- Camada: LOSA (Line Operations Safety Audit)
--- ============================================
 
 CREATE TABLE IF NOT EXISTS deletion_log (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  
-  -- Quem
   user_id UUID NOT NULL,
-  
-  -- O que
-  table_name TEXT NOT NULL,              -- 'calendar' ou 'spent'
-  record_id TEXT NOT NULL,               -- uuid/id_spent do registro
-  record_snapshot JSONB,                 -- copia COMPLETA do registro antes da exclusao
-  
-  -- Como
-  deleted_by TEXT NOT NULL DEFAULT 'ai_agent',  -- 'ai_agent', 'button', 'google_sync', 'manual'
-  deletion_source TEXT,                          -- 'prompt_excluir', 'excluir2', 'webhook_google', 'botao_whatsapp'
-  
-  -- Quando
+  table_name TEXT NOT NULL,
+  record_id TEXT NOT NULL,
+  record_snapshot JSONB,
+  deleted_by TEXT NOT NULL DEFAULT 'ai_agent',
+  deletion_source TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Indice por usuario (para consultas de historico)
 CREATE INDEX IF NOT EXISTS idx_deletion_log_user ON deletion_log (user_id, created_at DESC);
 
--- Indice por tabela (para analise de padroes)
-CREATE INDEX IF NOT EXISTS idx_deletion_log_table ON deletion_log (table_name, created_at DESC);
-
--- RLS: usuario so ve seus proprios logs
 ALTER TABLE deletion_log ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own deletion logs" ON deletion_log
   FOR SELECT USING (auth.uid() = user_id);
 
--- Apenas service_role pode inserir (N8N e Edge Functions)
 CREATE POLICY "Service role can insert deletion logs" ON deletion_log
   FOR INSERT WITH CHECK (TRUE);
-
--- Ninguem pode deletar logs (imutavel)
--- Nenhuma policy de DELETE = bloqueado por padrao com RLS habilitado
 ```
 
 ---
 
-## 7.2 — Node: log_exclusao_evento (Calendar WebHooks)
-
-**Onde adicionar:** ANTES do node `delete_supabase` (ou `soft_delete_calendar`)
-**Conexao:** Inserir ENTRE o node anterior e o DELETE. O log deve rodar ANTES da exclusao.
+## 7.2 — Calendar: log ANTES do delete_supabase
 
 **Acao:**
-1. No workflow "Calendar WebHooks", localize o ponto ANTES do DELETE
-2. Adicione um node **Code** chamado `log_exclusao_evento`
-3. Conecte: [node anterior] → `log_exclusao_evento` → `delete_supabase`
+1. Adicione um novo node **Supabase** (Insert)
+2. Nomeie como: `log_exclusao_evento`
+3. Posicao sugerida: [2550, 1440] (antes do delete_supabase)
+4. Desconecte `limpar_tokens_e_reduzir_saida2` de `delete_supabase`
+5. Conecte: `limpar_tokens_e_reduzir_saida2` → `log_exclusao_evento` → `delete_supabase`
 
-**Node Code para colar:**
+**Configuracao do node Supabase:**
 
-```javascript
-// Audit Log — Registrar exclusao de evento ANTES de executar
-// Camada LOSA: captura snapshot completo para investigacao futura
+| Configuracao | Valor |
+|-------------|-------|
+| Operation | Insert |
+| Table | `deletion_log` |
 
-const evento = $('Get a row').item.json;
-const userId = $('Edit Fields4').item.json.user_id;
+**Campos (Columns):**
 
-const supabaseUrl = 'SEU_SUPABASE_URL';
-const supabaseKey = 'SEU_SERVICE_ROLE_KEY';
+| Campo | Tipo | Valor |
+|-------|------|-------|
+| `user_id` | String | `={{ $('Edit Fields4').item.json.user_id }}` |
+| `table_name` | String | `calendar` |
+| `record_id` | String | `={{ $('Get a row').item.json.id }}` |
+| `record_snapshot` | String | `={{ JSON.stringify($('Get a row').item.json) }}` |
+| `deleted_by` | String | `ai_agent` |
+| `deletion_source` | String | `prompt_excluir_google` |
 
-const logEntry = {
-  user_id: userId,
-  table_name: 'calendar',
-  record_id: evento.id?.toString() || evento.uuid || 'unknown',
-  record_snapshot: evento,
-  deleted_by: 'ai_agent',
-  deletion_source: 'prompt_excluir'
-};
+**Credenciais:** Total Supabase (mesma dos outros nodes)
 
-try {
-  await fetch(`${supabaseUrl}/rest/v1/deletion_log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(logEntry)
-  });
-} catch (err) {
-  // Log falhou — NAO bloquear a exclusao por causa disso
-  console.error('Audit log insert failed:', err.message);
-}
+---
 
-// Passar dados adiante sem modificar
-return [$input.item];
+## 7.3 — Calendar: log ANTES do delete_supabase1
+
+**Acao:**
+1. Adicione um novo node **Supabase** (Insert)
+2. Nomeie como: `log_exclusao_evento_padrao`
+3. Posicao sugerida: [1340, 1632] (antes do delete_supabase1)
+4. Desconecte `If3` (output FALSE) de `delete_supabase1`
+5. Conecte: `If3` (FALSE) → `log_exclusao_evento_padrao` → `delete_supabase1`
+
+**Configuracao do node Supabase:**
+
+| Configuracao | Valor |
+|-------------|-------|
+| Operation | Insert |
+| Table | `deletion_log` |
+
+**Campos (Columns):**
+
+| Campo | Tipo | Valor |
+|-------|------|-------|
+| `user_id` | String | `={{ $('Edit Fields4').item.json.user_id }}` |
+| `table_name` | String | `calendar` |
+| `record_id` | String | `={{ $('Get a row').item.json.id }}` |
+| `record_snapshot` | String | `={{ JSON.stringify($('Get a row').item.json) }}` |
+| `deleted_by` | String | `ai_agent` |
+| `deletion_source` | String | `prompt_excluir_padrao` |
+
+**Credenciais:** Total Supabase
+
+---
+
+## 7.4 — Financeiro: log ANTES do Soft Delete (antigo Delete a row)
+
+**Acao:**
+1. Adicione um novo node **Supabase** (Insert)
+2. Nomeie como: `log_exclusao_gasto`
+3. Posicao sugerida: [-900, 1088] (antes do Soft Delete / Delete a row)
+4. Desconecte `If` (TRUE) de `Delete a row`
+5. Conecte: `If` (TRUE) → `log_exclusao_gasto` → `Soft Delete`
+
+**Configuracao do node Supabase:**
+
+| Configuracao | Valor |
+|-------------|-------|
+| Operation | Insert |
+| Table | `deletion_log` |
+
+**Campos (Columns):**
+
+| Campo | Tipo | Valor |
+|-------|------|-------|
+| `user_id` | String | `={{ $json.id }}` |
+| `table_name` | String | `spent` |
+| `record_id` | String | `={{ $('Get a row6').item.json.id_spent }}` |
+| `record_snapshot` | String | `={{ JSON.stringify($('Get a row6').item.json) }}` |
+| `deleted_by` | String | `ai_agent` |
+| `deletion_source` | String | `excluir2` |
+
+**Credenciais:** Total Supabase
+
+---
+
+## Resultado Visual
+
+**Calendar (caminho Google):**
+```
+ANTES:
+... → limpar_tokens2 → delete_supabase → sucesso_google2
+
+DEPOIS:
+... → limpar_tokens2 → [log_exclusao_evento] → delete_supabase → verificar → sucesso_google2
+```
+
+**Financeiro:**
+```
+ANTES:
+If (TRUE) → Delete a row → Redis7
+
+DEPOIS:
+If (TRUE) → [log_exclusao_gasto] → Soft Delete → Redis7
 ```
 
 ---
 
-## 7.3 — Node: log_exclusao_evento_padrao (caminho sem Google)
-
-**Mesmo node, mas para o caminho `delete_supabase1`:**
-
-```javascript
-// Audit Log — Exclusao de evento (sem Google Calendar)
-const evento = $('Get a row').item.json;
-const userId = $('Edit Fields4').item.json.user_id;
-
-const supabaseUrl = 'SEU_SUPABASE_URL';
-const supabaseKey = 'SEU_SERVICE_ROLE_KEY';
-
-const logEntry = {
-  user_id: userId,
-  table_name: 'calendar',
-  record_id: evento.id?.toString() || evento.uuid || 'unknown',
-  record_snapshot: evento,
-  deleted_by: 'ai_agent',
-  deletion_source: 'prompt_excluir_padrao'
-};
-
-try {
-  await fetch(`${supabaseUrl}/rest/v1/deletion_log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(logEntry)
-  });
-} catch (err) {
-  console.error('Audit log insert failed:', err.message);
-}
-
-return [$input.item];
-```
-
----
-
-## 7.4 — Node: log_exclusao_gasto (Financeiro)
-
-**Onde adicionar:** ANTES do node `Delete a row` (ou `soft_delete_spent`) no workflow "Financeiro - Total"
-**Conexao:** [If TRUE] → `log_exclusao_gasto` → `soft_delete_spent` → Redis7
-
-```javascript
-// Audit Log — Registrar exclusao de gasto ANTES de executar
-const gasto = $('Get a row6').item.json;
-const userId = $json.id; // profile.id do usuario validado
-
-const supabaseUrl = 'SEU_SUPABASE_URL';
-const supabaseKey = 'SEU_SERVICE_ROLE_KEY';
-
-const logEntry = {
-  user_id: userId,
-  table_name: 'spent',
-  record_id: gasto.id_spent || 'unknown',
-  record_snapshot: {
-    id_spent: gasto.id_spent,
-    name_spent: gasto.name_spent,
-    value_spent: gasto.value_spent,
-    date_spent: gasto.date_spent,
-    category_spent: gasto.category_spent,
-    type_spent: gasto.type_spent,
-    entra_sai_spent: gasto.entra_sai_spent
-  },
-  deleted_by: 'ai_agent',
-  deletion_source: 'excluir2'
-};
-
-try {
-  await fetch(`${supabaseUrl}/rest/v1/deletion_log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(logEntry)
-  });
-} catch (err) {
-  console.error('Audit log insert failed:', err.message);
-}
-
-return [$input.item];
-```
-
----
-
-## 7.5 — Consultas Uteis para Analise (LOSA)
-
-Copiar e colar no SQL Editor do Supabase para investigar padroes:
+## Consultas uteis (colar no SQL Editor)
 
 ```sql
--- Todas as exclusoes das ultimas 24h
-SELECT * FROM deletion_log
-WHERE created_at > NOW() - INTERVAL '24 hours'
-ORDER BY created_at DESC;
+-- Ultimas exclusoes (verificar se esta funcionando)
+SELECT * FROM deletion_log ORDER BY created_at DESC LIMIT 10;
 
--- Exclusoes por usuario especifico
-SELECT * FROM deletion_log
-WHERE user_id = 'UUID_DO_USUARIO'
-ORDER BY created_at DESC
-LIMIT 20;
+-- Exclusoes de um usuario especifico
+SELECT created_at, table_name, record_snapshot->>'event_name' as evento,
+       record_snapshot->>'name_spent' as gasto, deleted_by
+FROM deletion_log WHERE user_id = 'UUID_AQUI' ORDER BY created_at DESC;
 
--- Quantidade de exclusoes por dia (tendencia)
-SELECT
-  DATE(created_at) as dia,
-  table_name,
-  COUNT(*) as total
-FROM deletion_log
-GROUP BY dia, table_name
-ORDER BY dia DESC;
-
--- Registros excluidos que podem ser restaurados (soft delete ativo)
-SELECT
-  dl.created_at as excluido_em,
-  dl.table_name,
-  dl.record_snapshot->>'event_name' as evento,
-  dl.record_snapshot->>'name_spent' as gasto,
-  dl.deleted_by,
-  dl.deletion_source
-FROM deletion_log dl
-WHERE dl.created_at > NOW() - INTERVAL '30 days'
-ORDER BY dl.created_at DESC;
+-- Quantidade por dia (tendencia)
+SELECT DATE(created_at) as dia, table_name, COUNT(*) as total
+FROM deletion_log GROUP BY dia, table_name ORDER BY dia DESC;
 ```
 
 ---
 
-## Verificacao
+## Verificacao apos Passo 7
 
-1. Excluir um evento → verificar que apareceu registro em `deletion_log`
-2. Verificar que `record_snapshot` contem todos os dados do evento
-3. Excluir um gasto → verificar que apareceu em `deletion_log`
-4. Rodar consulta de ultimas 24h → deve mostrar as exclusoes feitas
+1. Excluir um evento → `SELECT * FROM deletion_log ORDER BY created_at DESC LIMIT 1` → deve mostrar o registro com snapshot
+2. Excluir um gasto → mesmo teste
+3. Verificar que `record_snapshot` contem todos os dados do registro original

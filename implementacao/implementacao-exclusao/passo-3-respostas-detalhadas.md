@@ -1,156 +1,88 @@
 # Passo 3 — Respostas Detalhadas dos Webhooks
 
-**Onde:** Sub-workflow "Calendar WebHooks - Total Assistente" e "Financeiro - Total"
+**Onde:** Sub-workflow "Calendar WebHooks - Total Assistente"
 **Resolve:** ALTA-1 (fire-and-forget), MEDIA-2 (resposta sem detalhes)
-**Risco:** BAIXO (substitui nodes Set por nodes Set com mais campos)
 
 ---
 
 ## O Que Fazer
 
-Substituir os nodes de resposta hardcoded (`sucesso_google2`, `sucesso_padrao2`) por nodes que retornam os DETALHES do evento excluido. Assim o AI Agent sabe EXATAMENTE o que foi deletado.
+Substituir os campos dos nodes `sucesso_google2` e `sucesso_padrao2` que retornam texto fixo por campos com os DADOS REAIS do evento excluido.
 
 ---
 
-## 3.1 — Node: sucesso_google2 (CORRIGIDO)
+## 3.1 — Node: sucesso_google2
 
-**Como encontrar:** No workflow "Calendar WebHooks", procure o node Set chamado `sucesso_google2`.
-**Acao:** Apague o node atual e cole este no lugar (mantenha as mesmas conexoes).
+**Como encontrar:** Node Set na posicao [2864, 1440], conectado apos `delete_supabase`.
 
-**Node corrigido completo:**
+**Acao:**
+1. Abra o node `sucesso_google2`
+2. Apague o campo existente (`sucesso`)
+3. Adicione estes campos:
 
+| Campo | Tipo | Valor |
+|-------|------|-------|
+| `status` | String | `sucesso` |
+| `mensagem` | String | `exclusao do evento na agenda google e padrao feito com sucesso` |
+| `evento_nome` | String | `={{ $('Get a row').item.json.event_name }}` |
+| `evento_inicio` | String | `={{ $('Get a row').item.json.start_event }}` |
+| `evento_fim` | String | `={{ $('Get a row').item.json.end_event }}` |
+| `evento_descricao` | String | `={{ $('Get a row').item.json.desc_event }}` |
+
+4. Salve o node
+
+---
+
+## 3.2 — Node: sucesso_padrao2
+
+**Como encontrar:** Node Set na posicao [1728, 1632], conectado apos `delete_supabase1`.
+
+**Acao:**
+1. Abra o node `sucesso_padrao2`
+2. Apague o campo existente (`sucesso_padrao`)
+3. Adicione estes campos:
+
+| Campo | Tipo | Valor |
+|-------|------|-------|
+| `status` | String | `sucesso` |
+| `mensagem` | String | `evento excluido na agenda padrao com sucesso` |
+| `evento_nome` | String | `={{ $('Get a row').item.json.event_name }}` |
+| `evento_inicio` | String | `={{ $('Get a row').item.json.start_event }}` |
+| `evento_fim` | String | `={{ $('Get a row').item.json.end_event }}` |
+| `evento_descricao` | String | `={{ $('Get a row').item.json.desc_event }}` |
+
+4. Salve o node
+
+---
+
+## Resposta Antes vs Depois
+
+**Antes:**
 ```json
-{
-  "parameters": {
-    "assignments": {
-      "assignments": [
-        {
-          "id": "3c9b9b8c-c13f-4063-a9e6-33cd39b6ed66",
-          "name": "status",
-          "value": "sucesso",
-          "type": "string"
-        },
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-          "name": "mensagem",
-          "value": "exclusao do evento na agenda google e padrao feito com sucesso.",
-          "type": "string"
-        },
-        {
-          "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-          "name": "evento_nome",
-          "value": "={{ $('Get a row').item.json.event_name }}",
-          "type": "string"
-        },
-        {
-          "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-          "name": "evento_inicio",
-          "value": "={{ $('Get a row').item.json.start_event }}",
-          "type": "string"
-        },
-        {
-          "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
-          "name": "evento_fim",
-          "value": "={{ $('Get a row').item.json.end_event }}",
-          "type": "string"
-        },
-        {
-          "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
-          "name": "evento_descricao",
-          "value": "={{ $('Get a row').item.json.desc_event }}",
-          "type": "string"
-        }
-      ]
-    },
-    "options": {}
-  },
-  "type": "n8n-nodes-base.set",
-  "typeVersion": 3.4,
-  "position": [2864, 1440],
-  "id": "275363b0-ae94-4143-8821-4e5c171860b4",
-  "name": "sucesso_google2"
-}
+{"sucesso": "exclusão do evento na agenda google e padrão feito com sucesso."}
 ```
 
-**O que muda:** Em vez de retornar apenas `"sucesso": "exclusao do evento..."`, agora retorna:
-- `status`: "sucesso"
-- `evento_nome`: nome do evento excluido
-- `evento_inicio`: data/hora inicio
-- `evento_fim`: data/hora fim
-- `evento_descricao`: descricao (se existir)
-
----
-
-## 3.2 — Node: sucesso_padrao2 (CORRIGIDO)
-
-**Como encontrar:** No workflow "Calendar WebHooks", procure o node Set chamado `sucesso_padrao2`.
-**Acao:** Apague o node atual e cole este no lugar.
-
-**Node corrigido completo:**
-
+**Depois:**
 ```json
 {
-  "parameters": {
-    "assignments": {
-      "assignments": [
-        {
-          "id": "4ede406e-5e39-4dfc-98a4-699202badec3",
-          "name": "status",
-          "value": "sucesso",
-          "type": "string"
-        },
-        {
-          "id": "f6a7b8c9-d0e1-2345-fabb-456789012345",
-          "name": "mensagem",
-          "value": "evento excluido na agenda padrao com sucesso, usuario nao possui conexao com google agenda.",
-          "type": "string"
-        },
-        {
-          "id": "a7b8c9d0-e1f2-3456-abbc-567890123456",
-          "name": "evento_nome",
-          "value": "={{ $('Get a row').item.json.event_name }}",
-          "type": "string"
-        },
-        {
-          "id": "b8c9d0e1-f2a3-4567-bccd-678901234567",
-          "name": "evento_inicio",
-          "value": "={{ $('Get a row').item.json.start_event }}",
-          "type": "string"
-        },
-        {
-          "id": "c9d0e1f2-a3b4-5678-cdde-789012345678",
-          "name": "evento_fim",
-          "value": "={{ $('Get a row').item.json.end_event }}",
-          "type": "string"
-        },
-        {
-          "id": "d0e1f2a3-b4c5-6789-deef-890123456789",
-          "name": "evento_descricao",
-          "value": "={{ $('Get a row').item.json.desc_event }}",
-          "type": "string"
-        }
-      ]
-    },
-    "options": {}
-  },
-  "type": "n8n-nodes-base.set",
-  "typeVersion": 3.4,
-  "position": [1728, 1632],
-  "id": "e666451f-cd7e-4715-8d33-2539019d7d9a",
-  "name": "sucesso_padrao2"
+  "status": "sucesso",
+  "mensagem": "exclusao do evento na agenda google e padrao feito com sucesso",
+  "evento_nome": "Reuniao com Carlos",
+  "evento_inicio": "2026-04-05T14:00:00-03:00",
+  "evento_fim": "2026-04-05T15:00:00-03:00",
+  "evento_descricao": "Sala 3"
 }
 ```
 
 ---
 
-## 3.3 — Financeiro: Redis7 (sem mudanca necessaria)
+## Financeiro: Redis7 (sem mudanca)
 
-O node `Redis7` ja retorna o JSON completo do registro excluido (`$json` do Delete a row). O AI Agent recebe os dados — o problema estava no PROMPT que nao instruia a verificar. Isso ja foi corrigido no Passo 1 (Etapa 5 do prompt).
+O node `Redis7` ja retorna o JSON completo do registro. O prompt corrigido (Passo 1, Etapa 5) ja instrui o AI Agent a verificar a resposta.
 
 ---
 
-## Verificacao
+## Verificacao apos Passo 3
 
-Apos aplicar, testar:
-1. Excluir um evento → verificar que o retorno do webhook contem `evento_nome`, `evento_inicio`, `evento_fim`
-2. Verificar no log do AI Agent que ele recebe os detalhes e usa na resposta ao usuario
+1. Excluir um evento → verificar nos logs do N8N que a resposta contem `evento_nome`, `evento_inicio`
+2. Verificar que o AI Agent usa esses dados na mensagem ao usuario
