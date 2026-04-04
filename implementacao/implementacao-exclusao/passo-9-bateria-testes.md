@@ -80,12 +80,12 @@
 
 ---
 
-## CAMADA 6 — Verificacao Google API (Passo 6)
+## CAMADA 6 — Verificacao Pos-DELETE (Passo 6)
 
 | ID | Cenario | Esperado | Verifica |
 |----|---------|----------|----------|
-| G1 | Token Google valido | Exclusao prossegue normalmente | Evento removido do Google E do banco |
-| G2 | Token Google expirado/invalido | Para em `erro_google_api` | Evento MANTIDO no banco |
+| G1 | UPDATE no Supabase funciona | `verificar_delete_google` → TRUE → `sucesso_google2` com detalhes | AI recebe status="sucesso" + evento_nome |
+| G2 | UPDATE no Supabase falha (event_id invalido) | `verificar_delete_google` → FALSE → `erro_delete_google` | AI recebe status="erro" e NAO diz "excluido" |
 
 ---
 
@@ -149,7 +149,7 @@ Execute TODOS os testes acima. Marque como PASS ou FAIL:
 | 3. Verificacao pos-exclusao | P1-P3 | [ ] |
 | 4. Soft delete | S1-S4 | [ ] |
 | 5. Respostas detalhadas | R1-R2 | [ ] |
-| 6. Google API check | G1-G2 | [ ] |
+| 6. Verificacao pos-DELETE | G1-G2 | [ ] |
 | 7. user_id no DELETE | U1-U2 | [ ] |
 | 8. Branches de erro | E1-E3 | [ ] |
 | 10. Audit log | L1-L4 | [ ] |

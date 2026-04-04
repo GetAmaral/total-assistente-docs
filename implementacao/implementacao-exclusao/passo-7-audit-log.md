@@ -72,6 +72,8 @@ CREATE POLICY "Service role can insert deletion logs" ON deletion_log
 
 **Credenciais:** Total Supabase (mesma dos outros nodes)
 
+**IMPORTANTE:** No node, ative **Settings → Always Output Data = ON**. Isso garante que mesmo se o INSERT falhar (ex: timeout), o fluxo continua para o DELETE e nao trava.
+
 ---
 
 ## 7.3 — Calendar: log ANTES do delete_supabase1
@@ -102,6 +104,7 @@ CREATE POLICY "Service role can insert deletion logs" ON deletion_log
 | `deletion_source` | String | `prompt_excluir_padrao` |
 
 **Credenciais:** Total Supabase
+**Settings:** Always Output Data = ON
 
 ---
 
@@ -133,6 +136,7 @@ CREATE POLICY "Service role can insert deletion logs" ON deletion_log
 | `deletion_source` | String | `excluir2` |
 
 **Credenciais:** Total Supabase
+**Settings:** Always Output Data = ON
 
 ---
 

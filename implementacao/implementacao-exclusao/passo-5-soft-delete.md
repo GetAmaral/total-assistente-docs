@@ -127,7 +127,7 @@ Como o N8N usa `service_role_key` (bypassa RLS), e preciso adicionar o filtro ma
 | Campo | Valor |
 |-------|-------|
 | Key Name | `is_deleted` |
-| Key Value | `false` |
+| Key Value | `={{ false }}` (usar como expressao, nao texto) |
 
 3. Salve
 
