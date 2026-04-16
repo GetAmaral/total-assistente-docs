@@ -1,0 +1,25 @@
+────────────────────────────────────────
+ALTERAÇÃO NA TOOL criar_lembrete
+(User Premium - Total + User Standard - Total)
+────────────────────────────────────────
+
+LOCALIZAÇÃO:
+• User Premium - Total (3).json → node "criar_lembrete" (≈ linha 2911)
+• User Standard - Total (2).json → node "criar_lembrete" (≈ linha 2402)
+
+CAMPO A ALTERAR:
+bodyParameters → parameter com "name": "fim_lembrete" → property "value"
+
+VALOR ANTIGO (remover):
+────────────────────────────────────────
+{{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Coloque o fim do lembrete (15 minutos após o começo), formatado.`, 'string') }}
+
+VALOR NOVO (colar no campo):
+────────────────────────────────────────
+{{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Fim do lembrete em ISO 8601 com -03:00. Se o usuário informou início e fim explícitos (ex: "das 9h às 11h"), use o fim informado. Se informou duração explícita ("por X min", "por Xh", "duração de X"), use inicio + essa duração. Caso contrário, use inicio + 15 minutos (padrão).`, 'string') }}
+
+
+IMPORTANTE:
+• Alterar em AMBOS os workflows (User Premium E User Standard).
+• Fora isso, nada mais muda na tool.
+• Após salvar no n8n, recarregue o AI Agent que consome a tool para garantir que a nova descrição seja lida.
